@@ -50,10 +50,11 @@ module.exports.likeCard= (req, res) => {
     { new: true }, )
     .then(card => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные для постановки лайка."
         })
+        return;
       } if (!res[req.params.cardId]) {
         res.status (404). send( {
           "message" : "Передан несуществующий _id карточки."
@@ -70,11 +71,12 @@ module.exports.dislikeCard= (req, res) => {
     { new: true }, )
     .then(card => res.send({ data: card }))
     .catch((err) => {
-      if (!res[req.params.cardId]) {
+      if (err.name === 'CastError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные для снятия лайка."
         })
-      } if (err.name === 'DocumentNotFoundError') {
+        return;
+      } if (!res[req.params.cardId]) {
         res.status (404). send( {
           "message" : "Передан несуществующий _id карточки."
         })
