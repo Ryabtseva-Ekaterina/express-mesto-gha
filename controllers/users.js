@@ -2,9 +2,9 @@ const User = require('../models/user.js');
 
 module.exports.getUsers = (req, res) => {
    User.find({})
-    .then(user => res.send({ data: user }))
+    .then(user => res.send({ user }))
     .catch((err) => {
-      if (err.name === 'incorrectDataError') {
+      if (err.name === 'ValidationError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные при создании пользователя. "
         })
@@ -16,9 +16,9 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUser = (req, res) => {
   User.findById(req.params.userId)
-   .then(user => res.send({ data: user }))
+   .then(user => res.send({ user }))
    .catch((err) => {
-    if (err.name === 'notFoundError') {
+    if (err.name === 'DocumentNotFoundError') {
       res.status (404). send( {
         "message" : "Пользователь по указанному _id не найден."
       })
@@ -35,7 +35,7 @@ module.exports.createUser= (req, res) => {
     .then(user => res.status(200||201).send({ user }))
     .catch((err) => {
       console.log(err);
-      if (err.name === 'incorrectDataError') {
+      if (err.name === 'ValidationError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные при создании пользователя. "
         })
@@ -54,13 +54,13 @@ module.exports.updateUser= (req, res) => {
       runValidators: true,
       upsert: false
   } )
-    .then(user => res.send({ data: user }))
+    .then(user => res.send({ user }))
     .catch((err) => {
-      if (err.name === 'incorrectDataError') {
+      if (err.name === 'ValidationError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные при обновлении пользователя. "
         })
-      } if (err.name === 'notFoundError') {
+      } if (err.name === 'DocumentNotFoundError') {
         res.status (404). send( {
           "message" : "Пользователь по указанному _id не найден."
         })
@@ -79,13 +79,13 @@ module.exports.updateAvatar= (req, res) => {
       runValidators: true,
       upsert: false
   } )
-    .then(user => res.send({ data: user }))
+    .then(user => res.send({ user }))
     .catch((err) => {
-      if (err.name === 'incorrectDataError') {
+      if (err.name === 'ValidationError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные при обновлении аватара. "
         })
-      } if (err.name === 'notFoundError') {
+      } if (err.name === 'DocumentNotFoundErrorr') {
         res.status (404). send( {
           "message" : "Пользователь по указанному _id не найден."
         })

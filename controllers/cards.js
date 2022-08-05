@@ -1,12 +1,10 @@
-const {incorrectDataError, notFoundError} = require ('../error')
-
 const Card = require('../models/card.js');
 
 module.exports.getCards= (req, res) => {
    Card.find({})
     .then(card => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'incorrectDataError') {
+      if (err.name === 'ValidationError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные при создании карточки. "
         })
@@ -22,7 +20,7 @@ module.exports.createCard= (req, res) => {
   Card.create({ name, link, owner: req.user._id })
     .then(card => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'incorrectDataError') {
+      if (err.name === 'ValidationError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные при создании карточки. "
         })
@@ -36,7 +34,7 @@ module.exports.deleteCard= (req, res) => {
   Card.findByIdAndRemove( req.params.cardId )
     .then(card => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'notFoundError') {
+      if (err.name === 'DocumentNotFoundError') {
         res.status (404). send( {
           "message" : "Карточка с указанным _id не найдена."
         })
@@ -52,11 +50,11 @@ module.exports.likeCard= (req, res) => {
     { new: true }, )
     .then(card => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'incorrectDataError') {
+      if (err.name === 'ValidationError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные для постановки лайка."
         })
-      } if (err.name === 'notFoundError') {
+      } if (err.name === 'DocumentNotFoundError') {
         res.status (404). send( {
           "message" : "Передан несуществующий _id карточки."
         })
@@ -72,11 +70,11 @@ module.exports.dislikeCard= (req, res) => {
     { new: true }, )
     .then(card => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'incorrectDataError') {
+      if (err.name === 'ValidationError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные для снятия лайка."
         })
-      } if (err.name === 'notFoundError') {
+      } if (err.name === 'DocumentNotFoundError') {
         res.status (404). send( {
           "message" : "Передан несуществующий _id карточки."
         })
