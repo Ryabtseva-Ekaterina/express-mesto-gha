@@ -33,8 +33,8 @@ module.exports.createCard= (req, res) => {
 module.exports.deleteCard= (req, res) => {
   Card.findByIdAndRemove( req.params.cardId )
     .then(card => res.send({ data: card }))
-    .catch((err) => {
-      if (err.name === 'DocumentNotFoundError') {
+    .catch(() => {
+      if (!res[req.params.cardId]) {
         res.status (404). send( {
           "message" : "Карточка с указанным _id не найдена."
         })
@@ -54,7 +54,7 @@ module.exports.likeCard= (req, res) => {
         res.status (400). send( {
           "message" : "Переданы некорректные данные для постановки лайка."
         })
-      } if (err.name === 'DocumentNotFoundError') {
+      } if (!res[req.params.cardId]) {
         res.status (404). send( {
           "message" : "Передан несуществующий _id карточки."
         })
@@ -70,7 +70,7 @@ module.exports.dislikeCard= (req, res) => {
     { new: true }, )
     .then(card => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (!res[req.params.cardId]) {
         res.status (400). send( {
           "message" : "Переданы некорректные данные для снятия лайка."
         })
