@@ -1,4 +1,5 @@
 const Card = require('../models/card.js');
+const NotFound = require('../errors/errors');
 
 module.exports.getCards= (req, res) => {
    Card.find({})
@@ -32,9 +33,17 @@ module.exports.createCard= (req, res) => {
 
 module.exports.deleteCard= (req, res) => {
   Card.findByIdAndRemove( req.params.cardId )
+    .orFail (() => {
+      throw new NotFound;
+    })
     .then(card => res.send({ data: card }))
-    .catch(() => {
-      if (!res[req.params.cardId]) {
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status (400). send( {
+          "message" : "Переданы некорректные данные удаления."
+        })
+        return;
+      } else if (err.name === "NotFound") {
         res.status (404). send( {
           "message" : "Карточка с указанным _id не найдена."
         })
@@ -48,16 +57,18 @@ module.exports.likeCard= (req, res) => {
   Card.findByIdAndUpdate( req.params.cardId,
     { $addToSet: { likes: req.user._id } },
     { new: true }, )
+    .orFail (() => {
+      throw new NotFound;
+    })
     .then(card => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === "NotFound") {
+        res.status (404). send( {
+          "message" : "Передан несуществующий _id карточки"
+        })
+      } else if (err.name === 'CastError') {
         res.status (400). send( {
           "message" : "Переданы некорректные данные для постановки лайка."
-        })
-        return;
-      } if (!res[req.params.cardId]) {
-        res.status (404). send( {
-          "message" : "Передан несуществующий _id карточки."
         })
       } else {
         res.status(500).send({ message: 'Произошла ошибка' })
@@ -69,6 +80,9 @@ module.exports.dislikeCard= (req, res) => {
   Card.findByIdAndUpdate( req.params.cardId,
     { $pull: { likes: req.user._id } },
     { new: true }, )
+    .orFail (() => {
+      throw new NotFound;
+    })
     .then(card => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -76,7 +90,7 @@ module.exports.dislikeCard= (req, res) => {
           "message" : "Переданы некорректные данные для снятия лайка."
         })
         return;
-      } if (!res[req.params.cardId]) {
+      } else if (err.name === "NotFound") {
         res.status (404). send( {
           "message" : "Передан несуществующий _id карточки."
         })
