@@ -1,8 +1,11 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFound = require('../errors/errors');
 const {
-  ERROR_CODE, NOT_FOUND_CODE, CREATED_CODE, INTERNAL_SERVER_ERROR,
+  ERROR_CODE, NOT_FOUND_CODE, CREATED_CODE, INTERNAL_SERVER_ERROR, UNAUTHORIZED_ERROR,
 } = require('../errors/statusCode');
+const user = require('../models/user');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -36,8 +39,14 @@ module.exports.getUser = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  bcrypt.hash(req.body.password, 10)
+    .then((hash) => User.create({
+      email: req.body.email,
+      password: hash,
+      name: req.body.name,
+      about: req.body.about,
+      avatar: req.body.avatar,
+    }))
     .then((user) => res.status(CREATED_CODE).send({ user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -107,5 +116,30 @@ module.exports.updateAvatar = (req, res) => {
       } else {
         res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
       }
+    });
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильная почта или пароль'));
+      }
+      return bcrypt.compare(password, user.password);
+    })
+    .then((matched) => {
+      if (!matched) {
+        return Promise.reject(new Error('Неправильная почта или пароль'));
+      }
+      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+      res.send({ token });
+      // res.cookie( 'jwt', token {
+      //  maxAge: 3600000*24*7,
+      //  httpOnly: true
+      // });
+    })
+    .catch((err) => {
+      res.status(UNAUTHORIZED_ERROR).send({ massage: err.message });
     });
 };
