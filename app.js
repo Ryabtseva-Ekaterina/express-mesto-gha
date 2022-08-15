@@ -3,11 +3,11 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const users = require('./routes/users');
 const cardRouter = require('./routes/cards');
+const auth = require('./middlewares/auth');
 
 const { PORT = 3000 } = process.env;
 const { NOT_FOUND_CODE } = require('./errors/statusCode');
 const { login, createUser } = require('./controllers/users');
-const auth = require('./middlewares/auth');
 
 const app = express();
 
@@ -29,6 +29,10 @@ app.use('*', (req, res) => {
     message: 'Страница не найдена',
   });
 });
+
+// app.use((err, req, res, next) => {
+//  res.status(err.StatusCode).send({ message: err.message });
+// });
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

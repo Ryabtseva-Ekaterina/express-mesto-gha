@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const decode = require('jwt-decode');
 const User = require('../models/user');
 const NotFound = require('../errors/errors');
 const {
@@ -17,6 +18,29 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUser = (req, res) => {
   User.findById(req.params.userId)
+    .orFail(() => {
+      throw new NotFound();
+    })
+    .then((user) => {
+      res.send({ user });
+    })
+    .catch((err) => {
+      if (err.name === 'NotFound') {
+        res.status(NOT_FOUND_CODE).send({
+          message: 'Пользователь по указанному _id не найден.',
+        });
+      } else if (err.name === 'CastError') {
+        res.status(ERROR_CODE).send({
+          message: 'Пользователь по указанному _id не найден.',
+        });
+      } else {
+        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
+      }
+    });
+};
+
+module.exports.getUserInfo = (req, res) => {
+  User.findById(req.user._id)
     .orFail(() => {
       throw new NotFound();
     })
@@ -121,25 +145,16 @@ module.exports.updateAvatar = (req, res) => {
 
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
-  User.findOne({ email })
+  return User.findUserByCredentials(email, password)
     .then((user) => {
-      if (!user) {
-        return Promise.reject(new Error('Неправильная почта или пароль'));
-      }
-      return bcrypt.compare(password, user.password);
-    })
-    .then((matched) => {
-      if (!matched) {
-        return Promise.reject(new Error('Неправильная почта или пароль'));
-      }
       const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
-      res.send({ token });
-      // res.cookie( 'jwt', token {
-      //  maxAge: 3600000*24*7,
-      //  httpOnly: true
-      // });
+      return res.send({ token });
     })
+  // res.cookie( 'jwt', token {
+  //  maxAge: 3600000*24*7,
+  //  httpOnly: true
+  // });
     .catch((err) => {
-      res.status(UNAUTHORIZED_ERROR).send({ massage: err.message });
+      res.status(UNAUTHORIZED_ERROR).send({ message: err.message });
     });
 };
