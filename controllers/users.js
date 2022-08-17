@@ -7,6 +7,7 @@ const Conflicted = require('../errors/conflicted');
 const {
   CREATED_CODE,
 } = require('../errors/statusCode');
+const Unauthorized = require('../errors/unauthorized');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -55,7 +56,13 @@ module.exports.createUser = (req, res, next) => {
     .then((user) => {
       res.status(CREATED_CODE).send({ user });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(new Conflicted('Пользователь уже существует'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.updateUser = (req, res, next) => {
@@ -113,15 +120,8 @@ module.exports.login = (req, res, next) => {
       const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
       return res.send({ token });
     })
-  // res.cookie( 'jwt', token {
-  //  maxAge: 3600000*24*7,
-  //  httpOnly: true
-  // });
     .catch((err) => {
-      if (err.code === 11000) {
-        next(new Conflicted('Пользователь уже существует'));
-      } else {
-        next(err);
-      }
+      next(new Unauthorized('Необходима авторизация'));
+      next(err);
     });
 };
