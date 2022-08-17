@@ -14,7 +14,6 @@ module.exports.getUsers = (req, res, next) => {
 };
 
 module.exports.getUser = (req, res, next) => {
-  console.log(req.params);
   User.findById(req.params.userId)
     .orFail(() => {
       throw new NotFound('Пользователь по указанному _id не найден.');
@@ -22,14 +21,10 @@ module.exports.getUser = (req, res, next) => {
     .then((user) => {
       res.send({ user });
     })
-    .catch((err) => {
-      console.log(err);
-      next(err);
-    });
+    .catch(next);
 };
 
 module.exports.getThisUserInfo = (req, res, next) => {
-  console.log(req.user._id);
   const userId = req.user._id;
   User.findById(userId)
     .orFail(() => {
@@ -39,7 +34,6 @@ module.exports.getThisUserInfo = (req, res, next) => {
       res.send({ user });
     })
     .catch((err) => {
-      console.log(err);
       if (err.name === 'CastError') {
         next(new BadRequest('Пользователь по указанному _id не найден.'));
       } else {
@@ -60,18 +54,10 @@ module.exports.createUser = (req, res, next) => {
     .then((user) => {
       res.status(CREATED_CODE).send({ user });
     })
-    .catch((err) => {
-      console.log(err);
-      if (err.name === 'ValidationError') {
-        next(new BadRequest('Переданы некорректные данные при создании пользователя'));
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };
 
 module.exports.updateUser = (req, res, next) => {
-  console.log(req.user._id);
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -88,7 +74,6 @@ module.exports.updateUser = (req, res, next) => {
     .then((user) => res.send({ user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        console.log(err);
         next(new BadRequest('Переданы некорректные данные при обновлении пользователя'));
       } else {
         next(err);
@@ -97,7 +82,6 @@ module.exports.updateUser = (req, res, next) => {
 };
 
 module.exports.updateAvatar = (req, res, next) => {
-  console.log(req.user._id);
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -113,7 +97,6 @@ module.exports.updateAvatar = (req, res, next) => {
     })
     .then((user) => res.send({ user }))
     .catch((err) => {
-      console.log(err);
       if (err.name === 'ValidationError') {
         next(new BadRequest('Переданы некорректные данные при обновлении пользователя'));
       } else {
