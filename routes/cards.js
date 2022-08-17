@@ -6,7 +6,12 @@ const {
 
 cardRouter.get('/cards', getCards);
 
-cardRouter.post('/cards', createCard);
+cardRouter.post('/cards', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().required().min(2).max(30),
+    link: Joi.string().required(),
+  }),
+}), createCard);
 
 cardRouter.delete('/cards/:cardId', celebrate({
   params: Joi.object().keys({

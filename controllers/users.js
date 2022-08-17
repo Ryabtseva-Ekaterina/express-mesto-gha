@@ -3,8 +3,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFound = require('../errors/notFound');
 const BadRequest = require('../errors/badRequest');
+const Conflicted = require('../errors/conflicted');
 const {
-  CREATED_CODE, UNAUTHORIZED_ERROR,
+  CREATED_CODE,
 } = require('../errors/statusCode');
 
 module.exports.getUsers = (req, res, next) => {
@@ -105,7 +106,7 @@ module.exports.updateAvatar = (req, res, next) => {
     });
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
     .then((user) => {
@@ -117,6 +118,10 @@ module.exports.login = (req, res) => {
   //  httpOnly: true
   // });
     .catch((err) => {
-      res.status(UNAUTHORIZED_ERROR).send({ message: err.message });
+      if (err.code === 11000) {
+        next(new Conflicted('Пользователь уже существует'));
+      } else {
+        next(err);
+      }
     });
 };
