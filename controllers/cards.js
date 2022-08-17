@@ -1,105 +1,65 @@
 const Card = require('../models/card');
-const NotFound = require('../errors/errors');
-const {
-  ERROR_CODE, NOT_FOUND_CODE, INTERNAL_SERVER_ERROR,
-} = require('../errors/statusCode');
+const NotFound = require('../errors/unauthorized');
+const BadRequest = require('../errors/badRequest');
+const Conflicted = require('../errors/conflicted');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((card) => res.send({ data: card }))
-    .catch(() => {
-      res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
-    });
+    .catch(next);
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
 
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERROR_CODE).send({
-          message: 'Переданы некорректные данные при создании карточки. ',
-        });
+        next(new BadRequest('Переданы некорректные данные при создании карточки. '));
       } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
+        next(err);
       }
     });
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
+  console.log(req.user._id);
   Card.findByIdAndRemove(req.params.cardId)
     .orFail(() => {
-      throw new NotFound();
+      throw new NotFound('Карточка с указанным _id не найдена.');
     })
     .then((card) => {
-      if (!req.user._id) {
-        return res.status(ERROR_CODE).send({ message: 'Невозможно удалить карточку' });
+      if (!req.user._id === req.params.owner) {
+        throw new Conflicted('Невозможно удалить карточку');
       }
       res.send({ data: card });
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(ERROR_CODE).send({
-          message: 'Переданы некорректные данные удаления.',
-        });
-      } else if (err.name === 'NotFound') {
-        res.status(NOT_FOUND_CODE).send({
-          message: 'Карточка с указанным _id не найдена.',
-        });
-      } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
-      }
-    });
+    .catch(next);
 };
 
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
     .orFail(() => {
-      throw new NotFound();
+      throw new NotFound('Передан несуществующий _id карточки');
     })
     .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      if (err.name === 'NotFound') {
-        res.status(NOT_FOUND_CODE).send({
-          message: 'Передан несуществующий _id карточки',
-        });
-      } else if (err.name === 'CastError') {
-        res.status(ERROR_CODE).send({
-          message: 'Переданы некорректные данные для постановки лайка.',
-        });
-      } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
-      }
-    });
+    .catch(next);
 };
 
-module.exports.dislikeCard = (req, res) => {
+module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
     { new: true },
   )
     .orFail(() => {
-      throw new NotFound();
+      throw new NotFound('Переданы некорректные данные для снятия лайка.');
     })
     .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(ERROR_CODE).send({
-          message: 'Переданы некорректные данные для снятия лайка.',
-        });
-      } else if (err.name === 'NotFound') {
-        res.status(NOT_FOUND_CODE).send({
-          message: 'Передан несуществующий _id карточки.',
-        });
-      } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
-      }
-    });
+    .catch(next);
 };
