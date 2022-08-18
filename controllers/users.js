@@ -56,7 +56,7 @@ module.exports.createUser = (req, res, next) => {
     .then((user) => {
       const newUser = { ...user };
       delete newUser._doc.password;
-      res.status(CREATED_CODE).send(newUser);
+      res.status(CREATED_CODE).send(newUser._doc);
     })
     .catch((err) => {
       if (err.code === 11000) {
