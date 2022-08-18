@@ -54,7 +54,10 @@ module.exports.createUser = (req, res, next) => {
       avatar: req.body.avatar,
     }))
     .then((user) => {
-      res.status(CREATED_CODE).send({ user });
+      const newUser = { ...user };
+      delete newUser._doc.password;
+      console.log(newUser);
+      res.status(CREATED_CODE).send(newUser._doc);
     })
     .catch((err) => {
       if (err.code === 11000) {
