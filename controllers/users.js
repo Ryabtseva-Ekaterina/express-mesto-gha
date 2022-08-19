@@ -59,12 +59,15 @@ module.exports.createUser = (req, res, next) => {
       avatar: req.body.avatar,
     }))
     .then((user) => {
-      const newUser = { ...user };
-      delete newUser._doc.password;
-      res.status(CREATED_CODE).send(newUser._doc);
+      // const newUser = { ...user };
+      // delete newUser._doc.password;
+      // res.status(CREATED_CODE).send(newUser._doc);
+      const userData = (
+        [user.name, user.about, user.avatar, user.email, user._id]
+      );
+      res.status(CREATED_CODE).send(userData);
     })
     .catch((err) => {
-      console.log(err);
       if (err.code === 11000) {
         next(new Conflicted('Пользователь уже существует'));
       } else if (err.name === 'ValidationError') {

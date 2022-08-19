@@ -32,7 +32,7 @@ module.exports.deleteCard = (req, res, next) => {
       const owner = card.owner.toString();
       if (req.user._id === owner) {
         Card.deleteOne(card)
-          .then((card) => {
+          .then(() => {
             res.send({ card });
           })
           .catch(next);
