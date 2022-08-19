@@ -7,8 +7,8 @@ const cardRouter = require('./routes/cards');
 const auth = require('./middlewares/auth');
 
 const { PORT = 3000 } = process.env;
-const { INTERNAL_SERVER_ERROR } = require('./errors/statusCode');
 const NotFound = require('./errors/notFound');
+const INTERNAL_SERVER_ERROR = require('./errors/statusCode');
 const { login, createUser } = require('./controllers/users');
 
 const app = express();
@@ -51,6 +51,7 @@ app.use((err, req, res, next) => {
   } else {
     res.status(INTERNAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
   }
+  next();
 });
 
 app.listen(PORT, () => {
