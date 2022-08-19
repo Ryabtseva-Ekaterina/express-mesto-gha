@@ -2,7 +2,6 @@ const Card = require('../models/card');
 const NotFound = require('../errors/notFound');
 const BadRequest = require('../errors/badRequest');
 const Forbidden = require('../errors/forbidden');
-const { remove } = require('../models/card');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
