@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const BadRequest = require('../errors/badRequest');
 
 const cardSchema = new mongoose.Schema({
   name: {
