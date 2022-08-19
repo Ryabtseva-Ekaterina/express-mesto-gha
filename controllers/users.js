@@ -62,9 +62,13 @@ module.exports.createUser = (req, res, next) => {
       // const newUser = { ...user };
       // delete newUser._doc.password;
       // res.status(CREATED_CODE).send(newUser._doc);
-      const userData = (
-        [user.name, user.about, user.avatar, user.email, user._id]
-      );
+      const userData = {
+        email: user.email,
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        _id: user._id,
+      };
       res.status(CREATED_CODE).send(userData);
     })
     .catch((err) => {
