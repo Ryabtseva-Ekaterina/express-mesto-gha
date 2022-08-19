@@ -7,7 +7,6 @@ const Conflicted = require('../errors/conflicted');
 const {
   CREATED_CODE,
 } = require('../errors/statusCode');
-const Unauthorized = require('../errors/unauthorized');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -23,7 +22,13 @@ module.exports.getUser = (req, res, next) => {
     .then((user) => {
       res.send({ user });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequest('Пользователь по указанному _id не найден.'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.getThisUserInfo = (req, res, next) => {
@@ -59,8 +64,11 @@ module.exports.createUser = (req, res, next) => {
       res.status(CREATED_CODE).send(newUser._doc);
     })
     .catch((err) => {
+      console.log(err);
       if (err.code === 11000) {
         next(new Conflicted('Пользователь уже существует'));
+      } else if (err.name === 'ValidationError') {
+        next(new BadRequest('Переданы некорректные данные при создании пользователя пользователя'));
       } else {
         next(err);
       }
@@ -122,8 +130,5 @@ module.exports.login = (req, res, next) => {
       const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
       return res.send({ token });
     })
-    .catch((err) => {
-      next(new Unauthorized('Необходима авторизация'));
-      next(err);
-    });
+    .catch(next);
 };

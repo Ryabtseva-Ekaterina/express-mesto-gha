@@ -2,6 +2,7 @@ const Card = require('../models/card');
 const NotFound = require('../errors/notFound');
 const BadRequest = require('../errors/badRequest');
 const Forbidden = require('../errors/forbidden');
+const { remove } = require('../models/card');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -24,19 +25,29 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .orFail(() => {
       throw new NotFound('Карточка с указанным _id не найдена.');
     })
     .then((card) => {
       const owner = card.owner.toString();
       if (req.user._id === owner) {
-        res.send({ card });
+        Card.deleteOne(card)
+          .then((card) => {
+            res.send({ card });
+          })
+          .catch(next);
       } else {
         throw new Forbidden('Невозможно удалить карточку');
       }
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequest('Карточка с указанным _id не найдена.'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.likeCard = (req, res, next) => {
@@ -49,7 +60,13 @@ module.exports.likeCard = (req, res, next) => {
       throw new NotFound('Передан несуществующий _id карточки');
     })
     .then((card) => res.send({ card }))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequest('Карточка с указанным _id не найдена.'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.dislikeCard = (req, res, next) => {
@@ -62,5 +79,11 @@ module.exports.dislikeCard = (req, res, next) => {
       throw new NotFound('Переданы некорректные данные для снятия лайка.');
     })
     .then((card) => res.send({ card }))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequest('Карточка с указанным _id не найдена.'));
+      } else {
+        next(err);
+      }
+    });
 };

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const BadRequest = require('../errors/badRequest');
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -11,6 +12,11 @@ const cardSchema = new mongoose.Schema({
   link: {
     type: String,
     required: true,
+    validate: {
+      validator(value) {
+        return /https?:\/\/(\w{3}\.)?[1-9a-z\-.]{1,}\w\w(\/[1-90a-z.,_@%&?+=~/-]{1,}\/?)?#?/i.test(value);
+      },
+    },
   },
 
   owner: {
@@ -21,6 +27,7 @@ const cardSchema = new mongoose.Schema({
 
   likes: [{
     type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
     default: [],
   }],
 

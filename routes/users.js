@@ -4,24 +4,24 @@ const {
   getUsers, getUser, getThisUserInfo, updateUser, updateAvatar,
 } = require('../controllers/users');
 
-router.get('/users', getUsers);
+router.get('', getUsers);
 
-router.get('/users/me', getThisUserInfo);
+router.get('/me', getThisUserInfo);
 
-router.get('/users/:userId', celebrate({
+router.get('/:userId', celebrate({
   params: Joi.object().keys({
-    userId: Joi.string().length(24),
+    userId: Joi.string().hex().length(24),
   }),
 }), getUser);
 
-router.patch('/users/me', celebrate({
+router.patch('/me', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
   }),
 }), updateUser);
 
-router.patch('/users/me/avatar', celebrate({
+router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
     avatar: Joi.string().regex(/https?:\/\/(\w{3}\.)?[1-9a-z\-.]{1,}\w\w(\/[1-90a-z.,_@%&?+=~/-]{1,}\/?)?#?/i),
   }),
